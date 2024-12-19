@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, message, Switch } from 'antd';
-import { EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, SearchOutlined, LogoutOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,11 +12,10 @@ const Notes = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(false); // Track dark mode
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  // Check for authentication
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -24,7 +23,6 @@ const Notes = () => {
     }
   }, [navigate]);
 
-  // Fetch notes
   const fetchNotes = async () => {
     setLoading(true);
     try {
@@ -32,7 +30,7 @@ const Notes = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
       });
       setNotes(response.data.notes);
-      setFilteredNotes(response.data.notes); // Initialize filtered notes
+      setFilteredNotes(response.data.notes);
     } catch (error) {
       message.error('Failed to fetch notes!');
     } finally {
@@ -40,7 +38,12 @@ const Notes = () => {
     }
   };
 
-  // Handle search by category
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    message.success('Logged out successfully!');
+    navigate('/');
+  };
+
   const handleSearch = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchTerm(value);
@@ -54,7 +57,6 @@ const Notes = () => {
     }
   };
 
-  // Add or edit note
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
@@ -69,9 +71,9 @@ const Notes = () => {
         });
         message.success('Note added successfully!');
       }
-      fetchNotes(); // Refresh notes list
-      setModalVisible(false); // Close modal
-      form.resetFields(); // Reset form fields
+      fetchNotes();
+      setModalVisible(false);
+      form.resetFields();
     } catch (error) {
       message.error('Error saving note!');
     } finally {
@@ -79,15 +81,13 @@ const Notes = () => {
     }
   };
 
-  // Edit note
   const handleEdit = (note) => {
     setSelectedNote(note);
     setIsEdit(true);
-    form.setFieldsValue(note); // Populate form with note data
+    form.setFieldsValue(note);
     setModalVisible(true);
   };
 
-  // Delete note
   const handleDelete = async (id) => {
     try {
       setLoading(true);
@@ -95,7 +95,7 @@ const Notes = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
       });
       message.success('Note deleted successfully!');
-      fetchNotes(); // Refresh notes list
+      fetchNotes();
     } catch (error) {
       message.error('Error deleting note!');
     } finally {
@@ -103,7 +103,6 @@ const Notes = () => {
     }
   };
 
-  // Columns for the table
   const columns = [
     { title: 'Title', dataIndex: 'title', key: 'title' },
     { title: 'Category', dataIndex: 'category', key: 'category' },
@@ -146,12 +145,21 @@ const Notes = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">Notes</h2>
           <div className="flex items-center space-x-4">
-            <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
-            <Switch
-              checked={isDarkMode}
-              onChange={() => setIsDarkMode(!isDarkMode)}
-              className="bg-blue-500"
-            />
+            <Button
+              icon={<LogoutOutlined />}
+              className="bg-red-500 text-white hover:bg-red-600"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+            <div className="flex items-center space-x-2">
+              <span>{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
+              <Switch
+                checked={isDarkMode}
+                onChange={() => setIsDarkMode(!isDarkMode)}
+                className="bg-blue-500"
+              />
+            </div>
           </div>
         </div>
         <div className="flex justify-between mb-4">
